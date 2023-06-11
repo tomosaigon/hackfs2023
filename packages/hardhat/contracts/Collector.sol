@@ -3,7 +3,6 @@ pragma solidity >=0.8.0 <0.9.0;
 
 // import "hardhat/console.sol";
 
-// pragma solidity ^0.8.0;
 enum ValidatorStatus {
     Undefined,
     Active,
@@ -11,14 +10,20 @@ enum ValidatorStatus {
 }
 
 interface ValidatorsContract {
-    function validatorStatus(address validator) external view returns (bool);
+    function validatorStatus(address validator) external view returns (ValidatorStatus);
 }
 
 contract Collector {
     enum SubmissionStatus {
         Initial,
-        Rejected,
-        Accepted
+        Accepted,
+        Rejected
+    }
+
+    enum OfferStatus {
+        Pending,
+        Accepted,
+        Rejected
     }
 
     struct Collection {
@@ -38,8 +43,18 @@ contract Collector {
         SubmissionStatus status;
     }
 
+    struct Offer {
+        uint256 collectionIndex;
+        uint256 deposit;
+        string requestURI;
+        bytes32 publicKey;
+        OfferStatus status;
+        string resultURI;
+    }
+
     Collection[] public collections;
     Submission[] public submissions;
+    Offer[] public offers;
 
     address public validatorsContract;
 
@@ -65,8 +80,11 @@ contract Collector {
         uint256 _maxParticipants
     ) public payable {
         ValidatorsContract validators = ValidatorsContract(validatorsContract);
-        require(validators.validatorStatus(_validator), "Invalid validator");
-        require(_maxParticipants > 0, "Max participants must be greater than zero");
+        require(validators.validatorStatus(_validator) == ValidatorStatus.Active, "Invalid validator");
+        require(
+            _maxParticipants > 0,
+            "Max participants must be greater than zero"
+        );
 
         Collection memory newCollection = Collection(
             _validator,
@@ -160,5 +178,27 @@ contract Collector {
             submissions[_submissionIndex].collectionIndex,
             _reason
         );
+    }
+
+    function createOffer(
+        uint256 _collectionIndex,
+        string memory _uri,
+        bytes32 _publicKey
+    ) public payable {
+        require(
+            _collectionIndex < collections.length,
+            "Invalid collection index"
+        );
+
+        Offer memory newOffer = Offer({
+            collectionIndex: _collectionIndex,
+            deposit: msg.value,
+            requestURI: _uri,
+            publicKey: _publicKey,
+            status: OfferStatus.Pending,
+            resultURI: ""
+        });
+
+        offers.push(newOffer);
     }
 }
