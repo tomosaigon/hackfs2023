@@ -8,15 +8,15 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const { deployer } = await getNamedAccounts();
   const chainId = await getChainId();
 
-  const adminAddr = '0xF618a8F94be558cc9cc2a2db4f7c2c1CAC77d3bF'; // or deployer
+  const ValidatorsContract = await ethers.getContract("Validators", deployer);
 
-  await deploy("Validators", {
+  await deploy("Collector", {
     // Learn more about args here: https://www.npmjs.com/package/hardhat-deploy#deploymentsdeploy
     from: deployer,
-    args: [adminAddr], // Pass deployer's address as the argument
+    args: [ValidatorsContract.address],
     log: true,
-    waitConfirmations: 1,
+    // waitConfirmations: 5,
   });
 
 };
-module.exports.tags = ["Validators"];
+module.exports.tags = ["Collector"];

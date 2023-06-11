@@ -347,6 +347,28 @@ function App(props) {
             contractConfig={contractConfig}
           />
         </Route>
+        <Route exact path="/validators">
+          <Contract
+            name="Validators"
+            price={price}
+            signer={userSigner}
+            provider={localProvider}
+            address={address}
+            blockExplorer={blockExplorer}
+            contractConfig={contractConfig}
+          />
+        </Route>
+        <Route exact path="/collector">
+          <Contract
+            name="Collector"
+            price={price}
+            signer={userSigner}
+            provider={localProvider}
+            address={address}
+            blockExplorer={blockExplorer}
+            contractConfig={contractConfig}
+          />
+        </Route>
         <Route path="/hints">
           <Hints
             address={address}
