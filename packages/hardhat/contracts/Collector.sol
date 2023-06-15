@@ -75,7 +75,7 @@ contract Collector {
     function createCollection(
         address _validator,
         bytes32 _publicKey,
-        string memory _request,
+        string calldata _request,
         uint256 _validationFee,
         uint256 _maxParticipants
     ) public payable {
