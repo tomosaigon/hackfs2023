@@ -10,7 +10,9 @@ enum ValidatorStatus {
 }
 
 interface ValidatorsContract {
-    function validatorStatus(address validator) external view returns (ValidatorStatus);
+    function validatorStatus(
+        address validator
+    ) external view returns (ValidatorStatus);
 }
 
 contract Collector {
@@ -80,7 +82,10 @@ contract Collector {
         uint256 _maxParticipants
     ) public payable {
         ValidatorsContract validators = ValidatorsContract(validatorsContract);
-        require(validators.validatorStatus(_validator) == ValidatorStatus.Active, "Invalid validator");
+        require(
+            validators.validatorStatus(_validator) == ValidatorStatus.Active,
+            "Invalid validator"
+        );
         require(
             _maxParticipants > 0,
             "Max participants must be greater than zero"
@@ -99,9 +104,45 @@ contract Collector {
         collections.push(newCollection);
     }
 
+    function getCollectionByIndex(
+        uint256 index
+    ) public view returns (Collection memory) {
+        require(index < collections.length, "Invalid collection index");
+
+        return collections[index];
+    }
+
+    function getCollectionCount() public view returns (uint256) {
+        return collections.length;
+    }
+
+    function getAllCollections() public view returns (Collection[] memory) {
+        return collections;
+    }
+
+    function getCollectionsByPage(
+        uint256 startPage,
+        uint256 count
+    ) public view returns (Collection[] memory) {
+        require(startPage > 0, "Start page must be greater than zero");
+        require(count > 0, "Count must be greater than zero");
+
+        uint256 startIndex = (startPage - 1) * count;
+        uint256 endIndex = startIndex + count;
+
+        require(endIndex <= collections.length, "Invalid start page or count");
+
+        Collection[] memory result = new Collection[](count);
+        for (uint256 i = startIndex; i < endIndex; i++) {
+            result[i - startIndex] = collections[i];
+        }
+
+        return result;
+    }
+
     function createSubmission(
         uint256 _collectionIndex,
-        string memory _uri
+        string calldata _uri
     ) public {
         require(
             _collectionIndex < collections.length,
@@ -119,6 +160,35 @@ contract Collector {
         submissions.push(newSubmission);
 
         collection.acceptedSubmissionCount++;
+    }
+
+    function getSubmissionCountByCollectionIndex(
+        uint256 collectionIndex
+    ) public view returns (uint256) {
+        uint256 count = 0;
+        for (uint256 i = 0; i < submissions.length; i++) {
+            if (submissions[i].collectionIndex == collectionIndex) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    function getSubmissionsByCollectionIndex(
+        uint256 collectionIndex
+    ) public view returns (Submission[] memory) {
+        uint256 count = getSubmissionCountByCollectionIndex(collectionIndex);
+        Submission[] memory result = new Submission[](count);
+        uint256 currentIndex = 0;
+
+        for (uint256 i = 0; i < submissions.length; i++) {
+            if (submissions[i].collectionIndex == collectionIndex) {
+                result[currentIndex] = submissions[i];
+                currentIndex++;
+            }
+        }
+
+        return result;
     }
 
     function acceptSubmission(uint256 _submissionIndex) public {
@@ -182,7 +252,7 @@ contract Collector {
 
     function createOffer(
         uint256 _collectionIndex,
-        string memory _uri,
+        string calldata _uri,
         bytes32 _publicKey
     ) public payable {
         require(
